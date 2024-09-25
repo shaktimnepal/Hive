@@ -46,7 +46,9 @@ Sample Data:
 1, North
 2, South
 3, East
-Solution
+
+Solution:
+
 1. Total Sales by Product Category
 Query:
 SELECT p.category, SUM(s.sale_amount) AS total_sales
@@ -59,6 +61,8 @@ Expected Output:
 |-------------|-------------|
 | Electronics | 1500.00     |
 | Furniture   | 1500.00     |
+
+
 2. Average Sales Per Region
 Query:
 SELECT r.region_name, AVG(s.sale_amount) AS avg_sales
@@ -72,6 +76,8 @@ Expected Output:
 | North       | 550.00      |
 | South       | 750.00      |
 | East        | 400.00      |
+
+
 3. Top 3 Products by Total Sales
 Query:
 SELECT p.product_name, SUM(s.sale_amount) AS total_sales
@@ -87,6 +93,8 @@ Expected Output:
 | Chair        | 700.00      |
 | Table        | 800.00      |
 | Laptop       | 900.00      |
+
+
 4. Regions with Higher-than-Average Sales
 Query:
 WITH avg_sales_all AS (
@@ -101,4 +109,7 @@ HAVING SUM(s.sale_amount) > (SELECT avg_sales FROM avg_sales_all);
 Expected Output:
 | region_name | total_sales |
 |-------------|-------------|
+| North       | 1100.00     |
 | South       | 1500.00     |
+
+
