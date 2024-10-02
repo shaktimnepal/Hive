@@ -1,5 +1,7 @@
-Business Use Case: E-Commerce Sales Analytics with Hive Partitioning and Bucketing
-Problem Statement
+Business Use Case: E-Commerce Sales Analytics with Hive Partitioning and Bucketing.
+
+Problem Statement:
+
 An e-commerce company processes massive amounts of sales data from customers across different regions and countries. The data is queried frequently for analytics purposes, such as:
 1. Daily Sales Reports by country and region.
 2. Product Sales Trends to identify the top-selling products in specific regions.
@@ -9,7 +11,9 @@ The dataset is large (millions of records), and querying it without optimization
 - Optimize queries for specific date ranges (daily sales reports).
 - Speed up queries for product categories.
 - Use partitioning and bucketing to manage this large dataset efficiently in Hive.
+
 Sample Data
+
 Sales Table (sales_data)
 Columns:
 - sale_id: INT
@@ -28,3 +32,140 @@ Sample Data:
 4, 104, Furniture, 2004, 800.00, 2023-08-03, UK, Europe
 5, 105, Clothing, 2005, 200.00, 2023-08-03, IN, Asia
 6, 106, Clothing, 2006, 600.00, 2023-08-03, IN, Asia
+
+Solution: Using Partitioning and Bucketing in Hive
+
+1. Create data file in local and upload it in HDFS:
+
+First a directory was created in local machine and a file sales_data.csv was created inside 
+the directory. Sample data was then copied, pasted and saved using nano command in that file.
+Another directory was created in HDFS into which sales_data.csv file was uploaded from the local
+machine. Now we are ready for tables creation in Hive, data loading from HDFS into the table 
+and running queries. The following command was used to upload file from local machine to HDFS.
+
+hadoop fs -put sales_data.csv /data/test/ecommerce/sales_data
+
+2. Partitioning:
+
+Partition the table based on sale_date and country. 
+This makes it easier to run queries like daily sales reports or sales filtered by country. 
+Partitioning reduces the amount of data scanned when querying specific partitions.
+
+- Partition on: sale_date, country
+
+3. Bucketing:
+
+Use bucketing on product_category and customer_id. 
+Bucketing divides data within partitions into smaller manageable files, 
+which helps in efficiently querying specific product categories or customers.
+
+- Bucket on: product_category, customer_id
+
+4. Create a non partitioned external table:
+
+Hive Query to create the table without any partitioning and bucketing:
+
+CREATE external TABLE non_partition_sales_data (
+sale_id INT,
+product_id INT,
+product_category STRING,
+customer_id INT,
+sale_amount FLOAT,
+sale_date STRING,
+country STRING,
+region STRING
+) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+LOCATION '/data/test/ecommerce/sales_data';
+
+5. Create Table with Partitioning and Bucketing:
+
+Hive Query to create the table with partitioning and bucketing:
+
+CREATE TABLE sales_data (
+sale_id INT,
+product_id INT,
+product_category STRING,
+customer_id INT,
+sale_amount FLOAT,
+region STRING
+)
+PARTITIONED BY (sale_date STRING, country STRING)
+CLUSTERED BY (product_category, customer_id) INTO 10 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS ORC;
+
+6. Insert data from non partition non bucketed table into the 
+partitioned and bucketed table:
+
+SET hive.enforce.bucketing = true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+Hive Query to load data from non partitoned, non bucketed table
+to the table with partitioning and bucketing:
+
+insert into table sales_data partition(sale_date,country) 
+select sale_id,
+product_id,
+product_category,
+customer_id,
+sale_amount,
+region,
+sale_date,
+country 
+from non_partition_sales_data;
+
+7. Query Optimizations Using Partitioning and Bucketing
+
+a. Daily Sales by Country
+
+To query daily sales for a specific country (e.g., USA) for a particular date:
+
+SELECT SUM(sale_amount) AS total_sales
+FROM sales_data
+WHERE sale_date = '2023-08-01' AND country = 'US';
+
+Output: 
+800.0
+
+b. Top Products by Category in a Region
+
+To find the top-selling products in a specific product category in a particular region:
+
+SELECT product_id, SUM(sale_amount) AS total_sales
+FROM sales_data
+WHERE product_category = 'Electronics' AND region = 'North America'
+GROUP BY product_id
+ORDER BY total_sales DESC
+LIMIT 10;
+
+Output: 
+101     500.0
+102     300.0
+
+c. Customer Purchase Trends
+
+To analyze purchase trends for a specific customer, say customer_id = 2005 or maybe like 12345 in case of actual real world data set, 
+across different product categories:
+
+SELECT product_category, SUM(sale_amount) AS total_spent
+FROM sales_data
+WHERE customer_id = 2005
+GROUP BY product_category
+ORDER BY total_spent DESC;
+
+Output: 
+Clothing        200.0
+
+7. Advantages of Partitioning and Bucketing
+- Partitioning: Limits the amount of data scanned, especially for time-based or country-based queries, 
+                speeding up reports like daily sales.
+- Bucketing: Divides large datasets into smaller, manageable chunks (buckets), 
+              improving performance when querying by product category or customer ID. 
+              This is ideal for targeted queries such as customer behavior analysis or product category trends.
+8. Conclusion
+Partitioning and bucketing in Hive improve query performance by reducing 
+the amount of data scanned and optimizing data storage. 
+In this e-commerce use case, partitioning by sale_date and country helps generate fast sales reports, 
+while bucketing by product_category and customer_id speeds up targeted queries, 
+such as top-selling products and customer segmentation.
