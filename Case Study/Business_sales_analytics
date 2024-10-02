@@ -1,6 +1,7 @@
-
 Business Use Case: Sales Analytics in Hive
-Problem Statement
+
+Problem Statement:
+
 A retail company wants to analyze its sales data using Hive. The business needs to understand the following metrics:
 1. Total sales by product category.
 2. Average sales per region.
@@ -11,7 +12,9 @@ The company has the following datasets:
 1. Sales data containing product sales information.
 2. Product data containing product categories and other details.
 3. Region data containing regional sales details.
+
 Sample Data
+
 Sales Table (sales_data)
 Columns:
 - sale_id: INT
@@ -26,6 +29,7 @@ Sample Data:
 3, 103, 2, 700.00, 2023-08-03
 4, 104, 2, 800.00, 2023-08-04
 5, 101, 3, 400.00, 2023-08-05
+
 Product Table (product_data)
 Columns:
 - product_id: INT
@@ -37,6 +41,7 @@ Sample Data:
 102, Mobile, Electronics
 103, Chair, Furniture
 104, Table, Furniture
+
 Region Table (region_data)
 Columns:
 - region_id: INT
