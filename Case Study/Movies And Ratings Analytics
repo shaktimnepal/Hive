@@ -1,0 +1,228 @@
+Problem Statement:
+
+Project to determine the ratings of a movie using the movie-lens dataset.
+
+Tools and technologies to be used
+Hadoop
+Hive
+UseCases
+List all the movies and the number of ratings
+List all the users and the number of ratings they have done for a movie
+List all the Movie IDs which have been rated (Movie Id with at least one user rating it)
+List all the Users who have rated the movies (Users who have rated at least one movie)
+List of all the User with the max ,min ,average ratings they have given against any movie
+List all the Movies with the max ,min, average ratings given by any user
+Submissions
+DDL commands used to create the tables
+Movie table needs to be partitioned on column genres.
+Rating table needs to be partitioned on userId and bucketed on rating column with number of buckets as 5
+DML commands to generate the results
+
+Schema
+Movie:
+movieId: Int, title: String, genres: String
+
+Rating:
+userId: Int, movieId: Int, rating: Double, timestamp: String
+
+
+SOLUTIONS:
+
+Firstly, the given data files were downloaded, the content of files were copied and 
+pasted in new csv files in local file system with names movies.csv and ratings.csv
+by using the nano command. Then those files were uploaded in two different directories
+in HDFS. Then the tables were created as follows:
+
+DDL Commands to create movies tables with partition:
+
+CREATE EXTERNAL TABLE non_partition_movies (
+movieId INT,
+title STRING,
+genres STRING
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+LOCATION '/data/test/hive_class_project/movies/';
+
+CREATE TABLE movies (
+movieId INT,
+title STRING
+)
+PARTITIONED BY (genres STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE;
+
+set hive.exec.dynamic.partition=true; 
+set hive.exec.dynamic.partition.mode=nonstrict; 
+set hive.exec.max.dynamic.partitions=10000; 
+set hive.exec.max.dynamic.partitions.pernode=5000;
+
+INSERT INTO TABLE movies partition(genres)
+SELECT 
+movieId,
+title,
+genres
+FROM non_partition_movies;
+
+DDL Commands to create ratings tables with partition and buckets:
+
+CREATE EXTERNAL TABLE non_partition_ratings (
+userId INT,
+movieId INT,
+rating DOUBLE,
+timestamp1 BIGINT
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+LOCATION '/data/test/hive_class_project/ratings/';
+
+
+CREATE TABLE ratings (
+movieId INT,
+rating DOUBLE,
+timestamp1 BIGINT
+)
+PARTITIONED BY (userId INT)
+CLUSTERED BY (rating) INTO 5 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE
+
+set hive.exec.dynamic.partition=true; 
+set hive.exec.dynamic.partition.mode=nonstrict; 
+set hive.exec.max.dynamic.partitions=10000; 
+set hive.exec.max.dynamic.partitions.pernode=5000;
+
+INSERT INTO TABLE ratings partition(userId)
+SELECT 
+movieId,
+rating,
+timestamp1,
+userId
+FROM non_partition_ratings;
+
+UseCases: DML commands to generate the results
+a. List all the movies and the number of ratings
+
+SELECT m.movieId, m.title, COUNT(r.rating) AS number_of_ratings FROM movies m 
+LEFT JOIN ratings r 
+ON m.movieId = r.movieId 
+GROUP BY m.movieId, m.title;
+
+Hive Terminal Output with LIMIT 10 filter:
+1       Toy Story (1995)        215
+2       Jumanji (1995)  110
+3       Grumpier Old Men (1995) 52
+4       Waiting to Exhale (1995)        7
+5       Father of the Bride Part II (1995)      49
+6       Heat (1995)     102
+7       Sabrina (1995)  54
+8       Tom and Huck (1995)     8
+9       Sudden Death (1995)     16
+10      GoldenEye (1995)        132
+
+b. List all the users and the number of ratings they have done for a movie
+		
+SELECT r.userId, COUNT(r.rating) AS number_of_ratings 
+FROM ratings r 
+GROUP BY r.userId;
+
+Hive Terminal Output with LIMIT 10 filter:
+1       232
+2       29
+3       39
+4       216
+5       44
+6       314
+7       152
+8       47
+9       46
+10      140
+
+c. List all the Movie IDs which have been rated (Movie Id with at least one user rating it)
+
+SELECT DISTINCT movieId 
+FROM ratings;
+
+Hive Terminal Output with LIMIT 10 filter:
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+d. List all the Users who have rated the movies (Users who have rated at least one movie)
+
+SELECT DISTINCT userId 
+FROM ratings;
+
+Hive Terminal Output with LIMIT 10 filter:
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+
+
+
+
+
+e. List of all the User with the max ,min ,average ratings they have given against any movie
+
+SELECT userId, 
+  MAX(rating) AS max_rating, 
+  MIN(rating) AS min_rating, 
+  AVG(rating) AS avg_rating 
+FROM ratings 
+GROUP BY userId;
+
+Hive Terminal Output with LIMIT 10 filter:
+1       5.0     1.0     4.366379310344827
+2       5.0     2.0     3.9482758620689653
+3       5.0     0.5     2.4358974358974357
+4       5.0     1.0     3.5555555555555554
+5       5.0     1.0     3.6363636363636362
+6       5.0     1.0     3.4936305732484074
+7       5.0     0.5     3.2302631578947367
+8       5.0     1.0     3.574468085106383
+9       5.0     1.0     3.260869565217391
+10      5.0     0.5     3.2785714285714285
+
+f. List all the Movies with the max ,min, average ratings given by any user
+
+SELECT movieId, 
+  MAX(rating) AS max_rating, 
+  MIN(rating) AS min_rating, 
+  AVG(rating) AS avg_rating 
+FROM ratings 
+GROUP BY movieId;
+
+Hive Terminal Output with LIMIT 10 filter:
+1       5.0     0.5     3.9209302325581397
+2       5.0     0.5     3.4318181818181817
+3       5.0     0.5     3.2596153846153846
+4       3.0     1.0     2.357142857142857
+5       5.0     0.5     3.0714285714285716
+6       5.0     1.0     3.946078431372549
+7       5.0     1.0     3.185185185185185
+8       5.0     1.0     2.875
+9       5.0     1.5     3.125
+10      5.0     0.5     3.496212121212121
+
+Summary of Submissions
+DDL commands:
+Created the movies table partitioned by genres.
+Created the ratings table partitioned by userId and bucketed by rating with 5 buckets.
+DML commands:
+Listed the queries to extract the required information for the use cases.
+Conclusion:
+This approach efficiently leverages Hive for querying the MovieLens dataset 
+and provides insights into the number of ratings for movies and users, along with rating statistics.
