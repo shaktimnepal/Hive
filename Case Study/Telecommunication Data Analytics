@@ -62,3 +62,17 @@ the directory. Sample data was then copied, pasted and saved using nano command 
 Now three different directories was created in HDFS inside a parent directory telecom into which csv files were uploaded from the local
 machine. Now we are ready for tables creation in Hive, data loading from HDFS into the table 
 and running queries. The following command was used to upload file from local machine to HDFS.
+
+hadoop fs -put call_data.csv /data/test/telecom/call_data
+hadoop fs -put data_usage.csv /data/test/telecom/data_usage
+hadoop fs -put sms_data.csv /data/test/telecom/sms_data
+
+2. Partitioning
+Partition the data by call_date and region. This helps reduce the amount of data scanned when querying for specific dates or regions.
+- Partition on: region, call_date
+
+3. Bucketing
+Use bucketing on customer_id for all tables (call_data, data_usage, sms_data). This allows for efficient queries targeting specific customers.
+- Bucket on: customer_id
+
+4. 
