@@ -52,3 +52,13 @@ Sample Data:
 3, 103, 8, East, 2023-08-03
 4, 104, 7, West, 2023-08-04
 5, 105, 15, North, 2023-08-05
+
+Solution: Using Partitioning and Bucketing in Hive
+
+1. Create data file in local and upload it in HDFS:
+
+First three directories were created in local machine and three files call_data.csv, data_usage.csv and sms_data.csv were created inside 
+the directory. Sample data was then copied, pasted and saved using nano command in those files.
+Now three different directories was created in HDFS inside a parent directory telecom into which csv files were uploaded from the local
+machine. Now we are ready for tables creation in Hive, data loading from HDFS into the table 
+and running queries. The following command was used to upload file from local machine to HDFS.
