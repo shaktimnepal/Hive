@@ -108,3 +108,38 @@ PARTITIONED BY (sale_date STRING, country STRING)
 CLUSTERED BY (product_category, customer_id) INTO 10 BUCKETS
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS ORC;
+
+6. Insert data from non partition non bucketed table into the 
+partitioned and bucketed table:
+
+SET hive.enforce.bucketing = true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+Hive Query to load data from non partitoned, non bucketed table
+to the table with partitioning and bucketing:
+
+insert into table sales_data partition(sale_date,country) 
+select sale_id,
+product_id,
+product_category,
+customer_id,
+sale_amount,
+region,
+sale_date,
+country 
+from non_partition_sales_data;
+
+7. Query Optimizations Using Partitioning and Bucketing
+
+a. Daily Sales by Country
+
+To query daily sales for a specific country (e.g., USA) for a particular date:
+
+SELECT SUM(sale_amount) AS total_sales
+FROM sales_data
+WHERE sale_date = '2023-08-01' AND country = 'US';
+
+Output: 
+800.0
+
+
