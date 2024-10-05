@@ -75,4 +75,36 @@ Partition the data by call_date and region. This helps reduce the amount of data
 Use bucketing on customer_id for all tables (call_data, data_usage, sms_data). This allows for efficient queries targeting specific customers.
 - Bucket on: customer_id
 
-4. 
+4. Create a non partitioned external table:
+
+Hive Query to create the table without any partitioning and bucketing:
+
+CREATE external TABLE non_partition_sales_data (
+sale_id INT,
+product_id INT,
+product_category STRING,
+customer_id INT,
+sale_amount FLOAT,
+sale_date STRING,
+country STRING,
+region STRING
+) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+LOCATION '/data/test/ecommerce/sales_data';
+
+5. Create Table with Partitioning and Bucketing:
+
+Hive Query to create the table with partitioning and bucketing:
+
+CREATE TABLE sales_data (
+sale_id INT,
+product_id INT,
+product_category STRING,
+customer_id INT,
+sale_amount FLOAT,
+region STRING
+)
+PARTITIONED BY (sale_date STRING, country STRING)
+CLUSTERED BY (product_category, customer_id) INTO 10 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS ORC;
