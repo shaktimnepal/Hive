@@ -10,6 +10,7 @@ Given the large scale of the dataset (millions of records), querying the data fo
 - Speed up queries to identify heavy data users.
 - Use partitioning and bucketing to manage the dataset efficiently in Hive, improving query performance and storage optimization.
 Sample Data
+
 Call Data Table (call_data)
 Columns:
 - call_id: INT
@@ -19,11 +20,12 @@ Columns:
 - call_date: DATE
 
 Sample Data:
-1, 101, 15.5, North, 2023-08-01
-2, 102, 20.2, South, 2023-08-02
-3, 103, 5.7, East, 2023-08-03
-4, 104, 12.4, West, 2023-08-04
-5, 105, 25.0, North, 2023-08-05
+1,101,15.5,North,2023-08-01
+2,102,20.2,South,2023-08-02
+3,103,5.7,East,2023-08-03
+4,104,12.4,West,2023-08-04
+5,105,25.0,North,2023-08-05
+
 Data Usage Table (data_usage)
 Columns:
 - usage_id: INT
@@ -33,11 +35,12 @@ Columns:
 - usage_date: DATE
 
 Sample Data:
-1, 101, 2.5, North, 2023-08-01
-2, 102, 3.0, South, 2023-08-02
-3, 103, 1.2, East, 2023-08-03
-4, 104, 5.5, West, 2023-08-04
-5, 105, 10.0, North, 2023-08-05
+1,101,2.5,North,2023-08-01
+2,102,3.0,South,2023-08-02
+3,103,1.2,East,2023-08-03
+4,104,5.5,West,2023-08-04
+5,105,10.0,North,2023-08-05
+
 SMS Data Table (sms_data)
 Columns:
 - sms_id: INT
@@ -47,11 +50,11 @@ Columns:
 - sms_date: DATE
 
 Sample Data:
-1, 101, 5, North, 2023-08-01
-2, 102, 10, South, 2023-08-02
-3, 103, 8, East, 2023-08-03
-4, 104, 7, West, 2023-08-04
-5, 105, 15, North, 2023-08-05
+1,101,5,North,2023-08-01
+2,102,10,South,2023-08-02
+3,103,8,East,2023-08-03
+4,104,7,West,2023-08-04
+5,105,15,North,2023-08-05
 
 Solution: Using Partitioning and Bucketing in Hive
 
@@ -75,71 +78,187 @@ Partition the data by call_date and region. This helps reduce the amount of data
 Use bucketing on customer_id for all tables (call_data, data_usage, sms_data). This allows for efficient queries targeting specific customers.
 - Bucket on: customer_id
 
-4. Create a non partitioned external table:
+4. Create a non partitioned external table, 
+create table with Partitioning and Bucketing and 
+insert data from non partition non bucketed table into the 
+partitioned and bucketed table for each data set :
 
-Hive Query to create the table without any partitioning and bucketing:
+For call_data:
 
-CREATE external TABLE non_partition_sales_data (
-sale_id INT,
-product_id INT,
-product_category STRING,
+a. Hive Query to create the external table without any partitioning and bucketing:
+
+CREATE external TABLE non_partition_call_data (
+
+call_id INT,
 customer_id INT,
-sale_amount FLOAT,
-sale_date STRING,
-country STRING,
-region STRING
+call_duration FLOAT,
+region STRING,
+call_date STRING
 ) 
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
-LOCATION '/data/test/ecommerce/sales_data';
+LOCATION '/data/test/telecom/call_data';
 
-5. Create Table with Partitioning and Bucketing:
+b. Hive Query to create the table with partitioning and bucketing:
 
-Hive Query to create the table with partitioning and bucketing:
-
-CREATE TABLE sales_data (
-sale_id INT,
-product_id INT,
-product_category STRING,
+CREATE TABLE call_data (
+call_id INT,
 customer_id INT,
-sale_amount FLOAT,
-region STRING
+call_duration FLOAT
 )
-PARTITIONED BY (sale_date STRING, country STRING)
-CLUSTERED BY (product_category, customer_id) INTO 10 BUCKETS
+PARTITIONED BY (region STRING, call_date STRING)
+CLUSTERED BY (customer_id) INTO 10 BUCKETS
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS ORC;
 
-6. Insert data from non partition non bucketed table into the 
+c. Hive Query to insert data from non partition non bucketed table into the 
 partitioned and bucketed table:
 
 SET hive.enforce.bucketing = true;
 set hive.exec.dynamic.partition.mode=nonstrict;
 
-Hive Query to load data from non partitoned, non bucketed table
-to the table with partitioning and bucketing:
-
-insert into table sales_data partition(sale_date,country) 
-select sale_id,
-product_id,
-product_category,
+INSERT INTO TABLE insert call_data PARTITION(region,call_date) 
+SELECT
+call_id,
 customer_id,
-sale_amount,
+call_duration,
 region,
-sale_date,
-country 
-from non_partition_sales_data;
+call_date
+FROM non_partition_call_data;
 
-7. Query Optimizations Using Partitioning and Bucketing
 
-a. Daily Sales by Country
+For data_usage:
 
-To query daily sales for a specific country (e.g., USA) for a particular date:
+a. Hive Query to create the external table without any partitioning and bucketing:
 
-SELECT SUM(sale_amount) AS total_sales
-FROM sales_data
-WHERE sale_date = '2023-08-01' AND country = 'US';
+CREATE EXTERNAL TABLE non_partition_data_usage(
+usage_id INT,
+customer_id INT,
+data_used FLOAT,
+region STRING,
+usage_date STRING
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+LOCATION '/data/test/telecom/data_usage';
+
+b. Hive Query to create the table with partitioning and bucketing:
+
+CREATE TABLE data_usage (
+usage_id INT,
+customer_id INT,
+data_used FLOAT
+)
+PARTITIONED BY (region STRING, usage_date STRING)
+CLUSTERED BY (customer_id) INTO 10 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS ORC;
+
+c. Hive Query to insert data from non partition non bucketed table into the 
+partitioned and bucketed table:
+
+SET hive.enforce.bucketing = true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT INTO TABLE data_usage PARTITION(region, usage_date)
+SELECT 
+usage_id,
+customer_id,
+data_used,
+region,
+usage_date
+FROM non_partition_data_usage;
+
+For sms_data:
+
+a. Hive Query to create the external table without any partitioning and bucketing:
+
+CREATE EXTERNAL TABLE non_partition_sms_data (
+sms_id INT,
+customer_id INT,
+sms_count INT,
+region STRING,
+sms_date STRING
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION '/data/test/telecom/sms_data';
+
+b. Hive Query to create the table with partitioning and bucketing:
+
+CREATE TABLE sms_data (
+sms_id INT,
+customer_id INT,
+sms_count INT
+)
+PARTITIONED BY (region STRING, sms_date STRING)
+CLUSTERED BY (customer_id) INTO 10 BUCKETS
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS ORC;
+
+c. Hive Query to insert data from non partition non bucketed table into the 
+partitioned and bucketed table:
+
+SET hive.enforce.bucketing = true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT INTO TABLE sms_data PARTITION(region,sms_date)
+SELECT 
+sms_id,
+customer_id,
+sms_count,
+region ,
+sms_date 
+FROM non_partition_sms_data;
+
+5. Query Optimizations Using Partitioning and Bucketing
+
+a. Call Durations by Region and Date
+
+To query total call durations for a specific region and date:
+
+SELECT SUM(call_duration) AS total_duration
+FROM call_data
+WHERE call_date = '2023-08-01' AND region = 'North';
 
 Output: 
-800.0
+15.5
 
+
+b. Top Data Users by Region
+
+To find the top data users in a specific region:
+
+SELECT customer_id, SUM(data_used) AS total_data
+FROM data_usage
+WHERE region = 'North'
+GROUP BY customer_id
+ORDER BY total_data DESC;
+
+Output: 
+105     10.0
+101     2.5
+
+
+c. SMS Usage Trends by Region
+
+To analyze SMS usage trends in a specific region:
+
+SELECT customer_id, SUM(sms_count) AS total_sms
+FROM sms_data
+WHERE region = 'North'
+GROUP BY customer_id;
+
+Output: 
+101     5
+105     15
+
+6. Advantages of Partitioning and Bucketing
+- Partitioning: Optimizes data retrieval for time-based and regional queries, reducing scan time for large datasets.
+- Bucketing: Improves query performance for specific customer-centric queries, 
+  helping analyze data for individual customers in telecom operations.
+
+7. Conclusion:
+
+    Partitioning and bucketing in Hive for telecommunication data improves query performance 
+    by optimizing data storage and retrieval. Partitioning by call_date, usage_date, and sms_date with region 
+    helps in faster regional and time-based queries, while bucketing by customer_id speeds up customer-centric queries, 
+    making it easier to identify trends and heavy data users.
 
