@@ -20,11 +20,12 @@ Columns:
 - treatment: STRING
 
 Sample Data:
-1, 101, North, 2023-09-01, Hypertension, Medication
-2, 102, South, 2023-09-02, Diabetes, Insulin
-3, 103, East, 2023-09-03, Flu, Antiviral
-4, 104, North, 2023-09-04, Asthma, Inhaler
-5, 105, South, 2023-09-05, Hypertension, Medication
+1,101,North,2023-09-01,Hypertension,Medication
+2,102,South,2023-09-02,Diabetes,Insulin
+3,103,East,2023-09-03,Flu,Antiviral
+4,104,North,2023-09-04,Asthma,Inhaler
+5,105,South,2023-09-05,Hypertension,Medication
+
 Prescription Data Table (prescriptions)
 Columns:
 - prescription_id: INT
@@ -37,8 +38,9 @@ Columns:
 - prescription_date: DATE
 
 Sample Data:
-1, 1, 45, Male, Lisinopril, 10mg, North, 2023-09-01
-2, 2, 60, Female, Metformin, 500mg, South, 2023-09-02
-3, 3, 25, Male, Tamiflu, 75mg, East, 2023-09-03
-4, 4, 50, Female, Albuterol, 90mcg, North, 2023-09-04
-5, 5, 70, Male, Lisinopril, 20mg, South, 2023-09-05
+1,1,45,Male,Lisinopril,10mg,North,2023-09-01
+2,2,60,Female,Metformin,500mg,South,2023-09-02
+3,3,25,Male,Tamiflu,75mg,East,2023-09-03
+4,4,50,Female,Albuterol,90mcg,North,2023-09-04
+5,5,70,Male,Lisinopril,20mg,South,2023-09-05
+
